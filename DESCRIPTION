@@ -1,0 +1,42 @@
+Package: BinaryPoissonUsingSPLITT
+Type: Package
+Title: Calculating the Likelihood of Phylogenetic Mixed Models using the 'SPLITT' Library
+Version: 1.0.1
+Date: 2018-11-15
+Authors@R: person("Venelin", "Mitov", email = "vmitov@gmail.com",
+                 role = c("aut", "cre", "cph"))
+Maintainer: Venelin Mitov <vmitov@gmail.com>
+Description: Implementation of the log-likelihood calculation of the univariate 
+    phylogenetic mixed model (PMM) using parallel tree traversal. The PMM is  
+    used for comparative analysis of biological data originating from a set of 
+    living and/or extinct species to estimate the rate of phenotypic evolution 
+    resulting from genetic drift. The calculation of the log-likelihood of the 
+    model parameters, given a phylogenetic tree and trait data at the tips, is
+    done using a quadratic polynomial representation of the log-likelihood 
+    function described in the article "Parallel Likelihood Calculation for 
+    Phylogenetic Comparative Models: the 'SPLITT' C++ Library". A preprint of 
+    the article is available from 
+    <https://www.biorxiv.org/content/early/2018/10/29/235739>. 
+    The package provides an implementation in R (function 'PMMLogLik') as well 
+    as a parallel implementation in C++ (function 'PMMLogLikCpp') based 
+    on the 'SPLITT' library for serial and parallel lineage traversal of trees 
+    (<https://venelin.github.io/SPLITT/index.html>). The function 'MiniBenchmark'
+    allows to compare the calculation times for different tree sizes.  
+License: GPL (>= 3.0)
+LazyData: true
+Encoding: UTF-8
+Depends:
+    R (>= 3.1.0),
+    Rcpp,
+    methods
+LinkingTo: Rcpp
+Imports:
+    ape
+Suggests: 
+    testthat
+RoxygenNote: 6.1.1
+ByteCompile: yes
+NeedsCompilation: yes
+URL: https://github.com/venelin/BinaryPoissonUsingSPLITT, https://venelin.github.io/SPLITT/index.html
+BugReports: https://github.com/venelin/BinaryPoissonUsingSPLITT/issues
+

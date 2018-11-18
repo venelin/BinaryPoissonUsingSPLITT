@@ -1,0 +1,3 @@
+# BinaryPoissonUsingSPLITT 1.0.1
+
+* First release on CRAN.
