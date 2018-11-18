@@ -2,31 +2,31 @@
 % Please edit documentation in R/BinaryPoissonModel.R
 \name{BinaryPoissonModelLogLik}
 \alias{BinaryPoissonModelLogLik}
-\title{Calculate the PMM log-likelihood for a given tree, data and model parameters}
+\title{Calculate the likelihood of a binary trait Poisson substituion model, 
+given a tree and binary trait data at the tips.}
 \usage{
-BinaryPoissonModelLogLik(x, tree, x0, sigma2, sigmae2,
-  ord = reorder(tree, order = "postorder", index.only = TRUE))
+BinaryPoissonModelLogLik(x, tree, x0, q01, q10, ord = reorder(tree, order
+  = "postorder", index.only = TRUE))
 }
 \arguments{
-\item{x}{a numerical vector of size N, where N is the number of tips in tree}
+\item{x}{an integer vector of size N, where N is the number of tips in tree.}
 
 \item{tree}{a phylo object}
 
-\item{x0, sigma2, sigmae2}{parameters of the PMM:
-\describe{
-\item{x0}{value at the root of tree excluding white noise;}
-\item{sigma2}{unit-time variance increment of the heritable component;}
-\item{sigmae2}{variance of the non-heritable component.}
-}}
+\item{x0, q01, q10}{model parameters.}
 
-\item{ord}{an integer vector denoting the pruning order. This should be the 
-result from calling `reorder(tree, order = "postorder", index.only = TRUE)`, 
-which is also set as a default value. Can be passed as argument to speed-up 
-the calculation.}
+\item{ord}{indices of the rows in tree$edge in pruning order. Defaults to 
+\code{reorder(tree, order = "postorder", index.only = TRUE))}}
 }
 \value{
-the log-likelihood value.
+the likelihood value.
 }
 \description{
-Calculate the PMM log-likelihood for a given tree, data and model parameters
+The binary trait Poisson substitution model assumes that a 
+trait (character) with two possible states (0 and 1) changes it's state at 
+random with constant rates of substitution from 0 to 1 (q01) and from
+1 to 0 (q10). The model parameters are the root-state x0, and the two rate
+parameters q01 and q10. The likelihood for given model parameters <x0, q01, q10>
+is defined as the probability of observing a given vector of states at the 
+tips of a fixed phylogenetic tree.
 }

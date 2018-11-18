@@ -7,7 +7,7 @@
 NewBinaryPoissonModelCppObject(x, tree)
 }
 \arguments{
-\item{x}{a numerical vector of size N, where N is the number of tips in tree}
+\item{x}{an integer vector of size N, where N is the number of tips in tree.}
 
 \item{tree}{a phylo object}
 }

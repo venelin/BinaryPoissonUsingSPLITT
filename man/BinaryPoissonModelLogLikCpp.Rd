@@ -2,45 +2,32 @@
 % Please edit documentation in R/BinaryPoissonModel.R
 \name{BinaryPoissonModelLogLikCpp}
 \alias{BinaryPoissonModelLogLikCpp}
-\title{Calculate the BinaryPoissonModel log-likelihood for a given tree, data and model parameters using the Rcpp module}
+\title{Calculate the likelihood of a Poisson binary trait substituion model, 
+given a tree and binary trait data at the tips.}
 \usage{
-BinaryPoissonModelLogLikCpp(x, tree, x0, sigma2, sigmae2,
+BinaryPoissonModelLogLikCpp(x, tree, x0, q01, q10,
   cppObject = NewBinaryPoissonModelCppObject(x, tree),
   mode = getOption("SPLITT.postorder.mode", 0))
 }
 \arguments{
-\item{x}{a numerical vector of size N, where N is the number of tips in tree}
+\item{x}{an integer vector of size N, where N is the number of tips in tree.}
 
 \item{tree}{a phylo object}
 
-\item{x0}{parameters of the PMM:
-\describe{
-\item{x0}{value at the root of tree excluding white noise;}
-\item{sigma2}{unit-time variance increment of the heritable component;}
-\item{sigmae2}{variance of the non-heritable component.}
-}}
+\item{x0}{model parameters.}
 
-\item{sigma2}{parameters of the PMM:
-\describe{
-\item{x0}{value at the root of tree excluding white noise;}
-\item{sigma2}{unit-time variance increment of the heritable component;}
-\item{sigmae2}{variance of the non-heritable component.}
-}}
+\item{q01}{model parameters.}
 
-\item{sigmae2}{parameters of the PMM:
-\describe{
-\item{x0}{value at the root of tree excluding white noise;}
-\item{sigma2}{unit-time variance increment of the heritable component;}
-\item{sigmae2}{variance of the non-heritable component.}
-}}
+\item{q10}{model parameters.}
 
 \item{cppObject}{a previously created object returned by \code{\link{NewBinaryPoissonModelCppObject}}}
 
 \item{mode}{an integer denoting the mode for traversing the tree, i.e. serial vs parallel.}
 }
 \value{
-the log-likelihood value.
+the likelihood value.
 }
 \description{
-Calculate the BinaryPoissonModel log-likelihood for a given tree, data and model parameters using the Rcpp module
+Calculate the likelihood of a Poisson binary trait substituion model, 
+given a tree and binary trait data at the tips.
 }
