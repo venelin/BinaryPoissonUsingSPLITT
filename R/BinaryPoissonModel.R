@@ -23,22 +23,26 @@
 # @author Venelin Mitov
 
 
-#' Calculate the PMM log-likelihood for a given tree, data and model parameters
-#' @param x a numerical vector of size N, where N is the number of tips in tree
+#' Calculate the likelihood of a binary trait Poisson substituion model, 
+#' given a tree and binary trait data at the tips. 
+#' 
+#' @description The binary trait Poisson substitution model assumes that a 
+#' trait (character) with two possible states (0 and 1) changes it's state at 
+#' random with constant rates of substitution from 0 to 1 (q01) and from
+#' 1 to 0 (q10). The model parameters are the root-state x0, and the two rate
+#' parameters q01 and q10. The likelihood for given model parameters <x0, q01, q10>
+#' is defined as the probability of observing a given vector of states at the 
+#' tips of a fixed phylogenetic tree. 
+#' 
+#' @param x an integer vector of size N, where N is the number of tips in tree.
 #' @param tree a phylo object
-#' @param x0,sigma2,sigmae2 parameters of the PMM:
-#' \describe{
-#' \item{x0}{value at the root of tree excluding white noise;}
-#' \item{sigma2}{unit-time variance increment of the heritable component;}
-#' \item{sigmae2}{variance of the non-heritable component.}
-#' }
-#' @param ord an integer vector denoting the pruning order. This should be the 
-#' result from calling `reorder(tree, order = "postorder", index.only = TRUE)`, 
-#' which is also set as a default value. Can be passed as argument to speed-up 
-#' the calculation.
-#' @return the log-likelihood value.
+#' @param x0,q01,q10 model parameters.
+#' @param ord indices of the rows in tree$edge in pruning order. Defaults to 
+#' \code{reorder(tree, order = "postorder", index.only = TRUE))}
+#' 
+#' @return the likelihood value.
 BinaryPoissonModelLogLik <- function(
-  x, tree, x0, sigma2, sigmae2, 
+  x, tree, x0, q01, q10, 
   ord = reorder(tree, order = "postorder", index.only = TRUE)) {
   
   # number of tips in the tree
@@ -46,13 +50,17 @@ BinaryPoissonModelLogLik <- function(
   # total number of nodes in the tree (tips, internal nodes and root node)
   M <- nrow(tree$edge) + 1L
   # state variables for each node
-  a <- b <- c <- rep(0.0, M)
-
-  # indices of the rows in tree$edge in pruning order
-  if(is.null(ord)) {
-    ord <- reorder(tree, order = "postorder", index.only = TRUE)
-  }
-
+  L0 <- L1 <- rep(1.0, M)
+  
+  # rate matrix
+  Q <- rbind(c(-q01, q01),
+             c(q10, -q10))
+  
+  eigQ <- eigen(Q)
+  lambdaQ <- eigQ$values
+  vecQ <- eigQ$vectors
+  vecQ_1 <- solve(vecQ)
+  
   for(o in ord) {
     # daughter node
     i <- tree$edge[o, 2]
@@ -60,42 +68,45 @@ BinaryPoissonModelLogLik <- function(
     j <- tree$edge[o, 1]
     # branch length
     t <- tree$edge.length[o]
-
+    
+    Pt <- vecQ %*% diag(exp(lambdaQ * t)) %*% vecQ_1
+    
     if(i <= N) {
       # initialize a tip node
-      a[i] <- -0.5 / sigmae2
-      b[i] <- x[i] / sigmae2
-      c[i] <- -0.5 * (x[i]*b[i] + log(2*pi*sigmae2))
+      L0[i] <- as.double(x[i] == 0)
+      L1[i] <- as.double(x[i] == 1)
     }
-
-    d = 1 - 2*a[i]*sigma2*t
-
-    # the order is important
-    c[i] <- c[i] - 0.5*log(d) + 0.5*b[i]*b[i]*sigma2*t/d
-    a[i] <- a[i] / d
-    b[i] <- b[i] / d
     
-    
-    a[j] <- a[j] + a[i]
-    b[j] <- b[j] + b[i]
-    c[j] <- c[j] + c[i]
+    L0[j] <- L0[j] * (Pt[1, 1]*L0[i] + Pt[1, 2]*L1[i])
+    L1[j] <- L1[j] * (Pt[2, 1]*L0[i] + Pt[2, 2]*L1[i])
   }
-
+  
   # for phylo objects, N+1 denotes the root node
-  a[N+1]*x0^2 + b[N+1]*x0 + c[N+1]
+  if(x0 == 0) {
+    L0[N+1]
+  } else {
+    L1[N+1]
+  }
 }
 
-#' Calculate the BinaryPoissonModel log-likelihood for a given tree, data and model parameters using the Rcpp module
+#' Calculate the likelihood of a Poisson binary trait substituion model, 
+#' given a tree and binary trait data at the tips.
+#'  
 #' @inheritParams BinaryPoissonModelLogLik
 #' @param cppObject a previously created object returned by \code{\link{NewBinaryPoissonModelCppObject}}
 #' @param mode an integer denoting the mode for traversing the tree, i.e. serial vs parallel.
 #' 
-#' @return the log-likelihood value.
-BinaryPoissonModelLogLikCpp <- function(x, tree, x0, sigma2, sigmae2, 
+#' @return the likelihood value.
+BinaryPoissonModelLogLikCpp <- function(x, tree, x0, q01, q10, 
                          cppObject = NewBinaryPoissonModelCppObject(x, tree),
                          mode = getOption("SPLITT.postorder.mode", 0)) {
-  abc <- cppObject$TraverseTree(c(sigma2, sigmae2), mode)
-  abc[1]*x0^2 + abc[2]*x0 + abc[3]
+  L0L1 <- cppObject$TraverseTree(c(q01, q10), mode)
+  
+  if(x0 == 0) {
+    L0L1[1]
+  } else {
+    L0L1[2]
+  }
 }
 
 

@@ -29,6 +29,7 @@
     
 // [[Rcpp::plugins("cpp11")]]
 // [[Rcpp::plugins(openmp)]]
+// [[Rcpp::depends("RcppArmadillo")]]
 
 using namespace SPLITT;
 using namespace BinaryPoissonUsingSPLITT;
@@ -37,7 +38,7 @@ typedef TraversalTask< BinaryPoissonModel<OrderedTree<uint, double>> > Traversal
 
 
 TraversalTaskBinaryPoissonModel* CreateTraversalTaskBinaryPoissonModel(
-    Rcpp::List const& tree, vec const& values) {
+    Rcpp::List const& tree, uvec const& values) {
   
   Rcpp::IntegerMatrix branches = tree["edge"];
   uvec parents(branches.column(0).begin(), branches.column(0).end());
@@ -87,7 +88,7 @@ RCPP_MODULE(BinaryPoissonUsingSPLITT__TraversalTaskBinaryPoissonModel) {
   Rcpp::class_<TraversalTaskBinaryPoissonModel>( "BinaryPoissonUsingSPLITT__TraversalTaskBinaryPoissonModel" )
   // The <argument-type-list> MUST MATCH the arguments of the factory function 
   // defined above.
-  .factory<Rcpp::List const&, vec const&>( &CreateTraversalTaskBinaryPoissonModel )
+  .factory<Rcpp::List const&, uvec const&>( &CreateTraversalTaskBinaryPoissonModel )
   // Expose the method that we will use to execute the TraversalTask
   .method( "TraverseTree", &TraversalTaskBinaryPoissonModel::TraverseTree )
   // Expose the algorithm property

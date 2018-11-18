@@ -1,18 +1,17 @@
 /**
- *  BinaryPoissonModel.h
- *  SPLITT
+ *  DiscreteTraitData.h
+ *  BinaryPoissonUsingSPLITT
  *
- * Copyright 2017 Venelin Mitov
+ * Copyright 2018 Venelin Mitov
  *
- * This file is part of SPLITT: a generic C++ library for Serial and Parallel
- * Lineage Traversal of Trees.
+ * This file is part of BinaryPoissonUsingSPLITT.
  *
- * SPLITT is free software: you can redistribute it and/or modify
+ * BinaryPoissonUsingSPLITT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
  *
- * SPLITT is distributed in the hope that it will be useful,
+ * BinaryPoissonUsingSPLITT is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
@@ -23,24 +22,23 @@
  *
  * @author Venelin Mitov
  */
-#ifndef NumericTraitData_H_
-#define NumericTraitData_H_
+#ifndef DiscreteTraitData_H_
+#define DiscreteTraitData_H_
 
 #include "./SPLITT.h"
-#include <iostream>
 
 namespace BinaryPoissonUsingSPLITT {
 
 using namespace SPLITT;
 
 template<class NameType>
-struct NumericTraitData {
+struct DiscreteTraitData {
   // use const references to avoid copying of long vectors
   std::vector<NameType> const& names_;
-  vec const& x_;
-  NumericTraitData(
+  uvec const& x_;
+  DiscreteTraitData(
     std::vector<NameType> const& names,
-    vec const& x): names_(names), x_(x) {}
+    uvec const& x): names_(names), x_(x) {}
 };
 }
-#endif //NumericTraitData_H_
+#endif //DiscreteTraitData_H_

@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 # BinaryPoissonUsingSPLITT
 
-The goal of BinaryPoissonUsingSPLITT is to provide a minimal example of how to use the SPLITT C++ library in an R-package. The package implements parallelized log-likelihood calculation of the univariate phylogenetic mixed model (PMM). The PMM is used in the comparative analysis of biological data originating from a set of living and/or extinct species to estimate the rate of phenotypic evolution resulting from genetic drift. The calculation of the log-likelihood of the model parameters, given a phylogenetic tree and trait data at the tips, is done using a quadratic polynomial representation of the log-likelihood function described in the article 'Parallel Likelihood Calculation for Phylogenetic Comparative Models: the 'SPLITT' C++ Library'. A preprint of the article is available from https://doi.org/10.1101/235739. The package provides an implementation in R (function 'PMMLogLik') as well as a parallel implementation in C++ (function 'PMMLogLikCpp') based on the 'SPLITT' library for serial and parallel lineage traversal of trees (https://venelin.github.io/SPLITT/index.html). The function 'MiniBenchmark' allows to compare the calculation times for different tree sizes.  See [this guide](https://venelin.github.io/SPLITT/articles/SPLITTRcppModules.html) for a tutorial. 
+Likelihood calculation of the binary Poisson model using the SPLITT library. This package implementats the example of a discrete model from the article 'Parallel Likelihood Calculation for Phylogenetic Comparative Models: the 'SPLITT' C++ Library'. A preprint of the article is available from https://doi.org/10.1101/235739. The function 'MiniBenchmark' allows to compare the calculation times for different tree sizes.  See [this guide](https://venelin.github.io/SPLITT/articles/SPLITTRcppModules.html) for a tutorial. 
 
 ## Installation
 
@@ -38,25 +38,17 @@ install.packages("BinaryPoissonUsingSPLITT")
 library(ape)
 library(BinaryPoissonUsingSPLITT)
 
-set.seed(10)
+N <- 100
 
-N <- 1000
-x0 <- 0.1
-alpha <- 1
-theta <- 10
-sigma2 <- 0.25
-sigmae2 <- 1
+x <- 1
+q01 <- 0.02
+q10 <- 0.8
 
 tree <- rtree(N)
+x <- sample(c(0, 1), size = N, replace = TRUE)
 
-g <- rTraitCont(tree, model = "OU", root.value = x0,
-                alpha = alpha, sigma = sqrt(sigma2),
-                ancestor = FALSE)
-
-x <- g + rnorm(n = N, mean = 0, sd = sqrt(sigmae2))
-
-cat("logLikelihood using R:", BinaryPoissonModelLogLik(x, tree, x0, sigma2, sigmae2), "\n")
-cat("logLikelihood using R:", BinaryPoissonModelLogLikCpp(x, tree, x0, sigma2, sigmae2), "\n")
+cat("logLikelihood using R:", BinaryPoissonModelLogLik(x, tree, 1, 0.02, 0.8), "\n")
+cat("logLikelihood using R:", BinaryPoissonModelLogLikCpp(x, tree, 1, 0.02, 0.8), "\n")
 ```
 
 * Performing a benchmark to measure the likelihood calculation times using different parallelization strategies:

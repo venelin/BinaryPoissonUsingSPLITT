@@ -42,20 +42,17 @@ MiniBenchmark <- function(N = 10000, Ntests = 10) {
       Ntests, " times ...\n")
   
   set.seed(10)
+  N <- 100
   
-  x0 <- 0.1
-  alpha <- 1
-  theta <- 2.1
-  sigma2 <- 0.25
-  sigmae2 <- 1
   
+  x0 <- 1
+  q01 <- 0.02
+  q10 <- 0.8
+
   tree <- rtree(N)
-  
-  g <- rTraitCont(tree, model = "BM", root.value = x0, sigma = sqrt(sigma2),
-                  ancestor = FALSE)
-  
-  x <- g + rnorm(n = N, mean = 0, sd = sqrt(sigmae2))
-  
+  x <- sample(c(0, 1), size = N, replace = TRUE)
+
+    
   if(R.version[['os']]=='linux-gnu') {
     # this only works on linux
     cpuInfo <- system("cat /proc/cpuinfo | grep 'model name' | uniq", intern = TRUE)
@@ -87,16 +84,16 @@ MiniBenchmark <- function(N = 10000, Ntests = 10) {
   cat("Measuring calculation times...\n")
   
   # warm-up for mode AUTO
-  for(t in 1:1000) BinaryPoissonModelLogLikCpp(x, tree, x0, sigma2, sigmae2, cppPMMObject, 0)
+  for(t in 1:1000) BinaryPoissonModelLogLikCpp(x, tree, x0, q01, q10, cppPMMObject, 0)
   
-  tR <- system.time(for(t in seq_len(Ntests/10)) BinaryPoissonModelLogLik(x, tree, x0, sigma2, sigmae2, ord = ord))[3] / (Ntests/10)
+  tR <- system.time(for(t in seq_len(Ntests/10)) BinaryPoissonModelLogLik(x, tree, x0, q01, q10, ord = ord))[3] / (Ntests/10)
   unname(tR)
   
   measureTimeBinaryPoissonModelCpp <- function(mode) {
     unname(
       system.time(
         for(t in seq_len(Ntests)) 
-          BinaryPoissonModelLogLikCpp(x, tree, x0, sigma2, sigmae2, cppPMMObject, mode)
+          BinaryPoissonModelLogLikCpp(x, tree, x0, q01, q10, cppPMMObject, mode)
       )[3] / Ntests*1000
     )
   }

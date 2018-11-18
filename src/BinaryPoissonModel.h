@@ -27,8 +27,9 @@
 #define BinaryPoissonModel_H_
 
 #include "./SPLITT.h"
-#include "./NumericTraitData.h"
+#include "./DiscreteTraitData.h"
 #include <iostream>
+#include <armadillo>
 #include <cmath>
 
 namespace BinaryPoissonUsingSPLITT {
@@ -44,13 +45,24 @@ public:
   typedef Tree TreeType;
   typedef PostOrderTraversal<MyType> AlgorithmType;
   typedef vec ParameterType;
-  typedef NumericTraitData<typename TreeType::NodeType> DataType;
+  typedef DiscreteTraitData<typename TreeType::NodeType> DataType;
   typedef vec StateType;
 
-  double sigmae2, sigma2;
-  vec x;
-  vec a, b, c;
-
+  // instantaneous rate parameters of transition from 0 to 1 and vice-versa
+  double q01, q10;
+  
+  // rate matrix
+  arma::mat22 Q; 
+  arma::vec2 lambdaQ;
+  arma::mat22 vecQ;
+  arma::mat22 vecQ_1;
+  
+  // binary-trait vector at the tips of the tree.
+  uvec x;
+  
+  // node-states 
+  vec L0, L1;
+  
   BinaryPoissonModel(TreeType const& tree, DataType const& input_data):
     BaseType(tree) {
 
@@ -60,64 +72,75 @@ public:
         this->ref_tree_.num_tips()<<"), but were"<<input_data.x_.size()<<".";
       throw std::invalid_argument(oss.str());
     } else {
-
+      
       uvec ordNodes = this->ref_tree_.OrderNodes(input_data.names_);
       this->x = At(input_data.x_, ordNodes);
-      this->a = vec(this->ref_tree_.num_nodes());
-      this->b = vec(this->ref_tree_.num_nodes());
-      this->c = vec(this->ref_tree_.num_nodes());
+      this->L0 = vec(this->ref_tree_.num_nodes());
+      this->L1 = vec(this->ref_tree_.num_nodes());
+      this->Q = arma::mat22();
     }
   };
 
   StateType StateAtRoot() const {
-    vec res(3);
-    res[0] = a[this->ref_tree_.num_nodes() - 1];
-    res[1] = b[this->ref_tree_.num_nodes() - 1];
-    res[2] = c[this->ref_tree_.num_nodes() - 1];
+    vec res(2);
+    res[0] = L0[this->ref_tree_.num_nodes() - 1];
+    res[1] = L1[this->ref_tree_.num_nodes() - 1];
     return res;
   };
-
+  
   void SetParameter(ParameterType const& par) {
     if(par.size() != 2) {
       throw std::invalid_argument(
-      "The par vector should be of length 2 with \
-      elements corresponding to sigma2 and sigmae2.");
+          "The par vector should be of length 2 with \
+      elements corresponding to q01 and q10.");
     }
     if(par[0] <= 0 || par[1] <= 0) {
-      throw std::logic_error("The parameters sigma2 and sigmae2 should be positive.");
+      throw std::logic_error("The parameters q01 and q10 should be positive.");
     }
-    this->sigma2 = par[0];
-    this->sigmae2 = par[1];
-  }
-
-  inline void InitNode(uint i) {
+    this->q01 = par[0];
+    this->q10 = par[1];
     
+    this->Q(0,0) = -this->q01;
+    this->Q(0,1) = this->q01;
+    this->Q(1,0) = this->q10;
+    this->Q(1,1) = -this->q10;
+    
+    using namespace arma;
+    cx_vec2 cx_lambdaQ;
+    cx_lambdaQ.fill(std::complex<double>(0.0, 0.0));
+    cx_mat22 cx_vecQ;
+    
+    eig_gen(cx_lambdaQ, cx_vecQ, this->Q);
+    
+    this->lambdaQ = real(cx_lambdaQ);
+    this->vecQ = real(cx_vecQ);
+    this->vecQ_1 = inv(this->vecQ);
+    
+  }
+  
+  inline void InitNode(uint i) {
     if(i < this->ref_tree_.num_tips()) {
-      a[i] = -0.5 / sigmae2;  
-      b[i] = x[i] / sigmae2;
-      c[i] = -0.5 * (x[i]*b[i] + log(2*G_PI*sigmae2));
+      L0[i] = x[i] == 0 ? 1.0 : 0.0;  
+      L1[i] = x[i] == 1 ? 1.0 : 0.0;
     } else {
-      a[i] = b[i] = c[i] = 0;
+      L0[i] = L1[i] = 1.0;
     }
   }
-
+  
   inline void VisitNode(uint i) {
+    
+  }
+  
+  inline void PruneNode(uint i, uint j) {
     double t = this->ref_tree_.LengthOfBranch(i);
     
-    double d = 1 - 2*a[i]*sigma2*t;
-    // the order is important here because for c[i] we use the previous values 
-    // of a[i] and b[i].
-    c[i] = c[i] - 0.5*log(d) + 0.5*b[i]*b[i]*sigma2*t/d;
-    a[i] /= d;
-    b[i] /= d;
+    using namespace arma;
+    // transition probability matrix
+    mat22 Pt = this->vecQ * diagmat(exp(this->lambdaQ * t)) * this->vecQ_1;
+    
+    L0[j] = L0[j] * (Pt(0, 0)*L0[i] + Pt(0, 1)*L1[i]);
+    L1[j] = L1[j] * (Pt(1, 0)*L0[i] + Pt(1, 1)*L1[i]);
   }
-
-  inline void PruneNode(uint i, uint j) {
-    a[j] = a[j] + a[i];
-    b[j] = b[j] + b[i];
-    c[j] = c[j] + c[i];
-  }
-
 };
 }
 
